@@ -1,0 +1,280 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title></title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link rel="stylesheet" href="stylesheets/bootstrap.css">
+  <style>
+  body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+  </style>
+  <link rel="stylesheet" href="stylesheets/bootstrap-responsive.css">
+  <link rel="stylesheet" href="stylesheets/style.css">
+  <link rel="stylesheet" href="scripts/libs/skins/tango/skin.css" />
+
+
+  <style type="text/css">
+    .jcarousel-skin-tango .jcarousel-container-horizontal {
+        width: 85%;
+        height: 85%;
+    }
+
+    .jcarousel-skin-tango .jcarousel-clip-horizontal {
+        width: 100%;
+        height: 100%;
+    }
+
+    .jcarousel-skin-tango .jcarousel-item {
+        height: 100%;    
+    }
+
+  </style>
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="scripts/libs/jquery-1.7.1.min.js"><\/script>')</script>
+
+  <script src="scripts/libs/bootstrap/transition.js"></script>
+  <script src="scripts/libs/bootstrap/collapse.js"></script>
+
+  <script src="scripts/script.js"></script>
+  <script src="scripts/libs/modernizr-2.5-respond-1.1.0.min.js"></script>
+  <script src="scripts/libs/jquery.validate.js"></script>
+  <script src="scripts/libs/jquery.form.js"></script>
+  <script src="scripts/libs/jquery.jcarousel.min.js"></script>
+ 
+  <script type="text/javascript">
+
+    $(function () {
+      //Customize the JQuery Validator plugin to validate US Phone nos
+      jQuery.validator.addMethod("phoneUS", function(phone_number, element) {
+          phone_number = phone_number.replace(/\s+/g, ""); 
+        return this.optional(element) || phone_number.length > 9 &&
+          phone_number.match(/^(1-?)?(\([2-9]\d{2}\)|[2-9]\d{2})-?[2-9]\d{2}-?\d{4}$/);
+      }, "Please specify a valid phone number");
+
+      //Customize the JQuery Validator plugin to display error messages using the Bootstrap theme
+      $("#leadGen").validate({  submitHandler: submitForm, rules: { Phone: {phoneUS: true}}, errorClass: "control-group error",  validClass: "control-group",  errorElement: "span",  highlight: function(element, errorClass, validClass) { if (element.type === 'radio') { this.findByName(element.name).parent("div").parent("div").removeClass(validClass).addClass(errorClass); } else { $(element).parent("div").parent("div").removeClass(validClass).addClass(errorClass); }  },  unhighlight: function(element, errorClass, validClass) { if (element.type === 'radio') { this.findByName(element.name).parent("div").parent("div").removeClass(errorClass).addClass(validClass); } else { $(element).parent("div").parent("div").removeClass(errorClass).addClass(validClass); }  }});
+    });
+
+    //Use the JQuery Form plugin to submit the form data.
+    function submitForm(form){
+      var options = { success: function(responseText, statusText, xhr, $form){
+                                  disableSubmitBtn(false);
+                                  $('#message').attr('class', 'alert alert-success').html("Thank you! We'll be contacting you shortly");
+                                  $('#referAFriend').css('display','block');                                  
+                                  $('#friendCarousel').jcarousel({ auto: 2,
+                                                                   visible: 4,
+                                                                   wrap: 'last',
+                                                                   initCallback: mycarousel_initCallback
+                                                                 });
+                              },
+                      error: function(jqXHR, textStatus, errorThrown){
+                                  disableSubmitBtn(false);
+                                  $('#message').attr('class','alert alert-error').html('Ooops. Something went horribly wrong! - '+jqXHR.responseText);
+                              }        
+                    };
+      disableSubmitBtn(true);
+      $(form).ajaxSubmit(options); 
+    }
+
+    function disableSubmitBtn(disable){
+      var progressIcn = $('#progressIcon');                              
+      var btn = $('#submitBtn');                              
+      if (disable){
+        progressIcn.css('display','block');
+        btn.addClass('disabled');
+        btn.attr("disabled", "disabled");        
+      }
+      else{
+        progressIcn.css('display','none');
+        btn.removeClass('disabled');
+        btn.removeAttr("disabled");        
+      }
+    }
+
+    function mycarousel_initCallback(carousel)
+    {
+        // Disable autoscrolling if the user clicks the prev or next button.
+        carousel.buttonNext.bind('click', function() {
+            carousel.startAuto(0);
+        });
+
+        carousel.buttonPrev.bind('click', function() {
+            carousel.startAuto(0);
+        });
+
+        // Pause autoscrolling if the user moves with the cursor over the clip.
+        carousel.clip.hover(function() {
+            carousel.stopAuto();
+        }, function() {
+            carousel.startAuto();
+        });
+    };
+
+    //Initialize the form with Facebook friend data
+    function referFriend(img){
+      var fbUser = $(img);
+      $('#heading').html('Contact My Friend');
+      $('#FirstName').val(fbUser.attr('first_name'));
+      $('#LastName').val(fbUser.attr('last_name'));
+      $('#Company').val('');
+      $('#Email').val('');
+      $('#Phone').val('');
+      $('#Description').val('');
+    }
+
+  </script>
+</head>
+<body>
+    <div id="fb-root"></div>
+    <script type="text/javascript">
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '<%= app.id %>', // App ID
+          channelUrl : '<%= url_no_scheme('/channel.html') %>', // Channel File
+          status     : true, // check login status
+          cookie     : true, // enable cookies to allow the server to access the session
+          xfbml      : true // parse XFBML
+        });
+
+        // Listen to the auth.login which will be called when the user logs in
+        // using the Login button
+        FB.Event.subscribe('auth.login', function(response) {
+          // We want to reload the page now so PHP can read the cookie that the
+          // Javascript SDK sat. But we don't want to use
+          // window.location.reload() because if this is in a canvas there was a
+          // post made to this page and a reload will trigger a message to the
+          // user asking if they want to send data again.
+          window.location = window.location;
+        });
+
+        FB.Canvas.setAutoGrow();
+      };
+
+      // Load the SDK Asynchronously
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/all.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+   </script>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="i-bar"></span>
+            <span class="i-bar"></span>
+            <span class="i-bar"></span>
+          </a>
+          <a class="brand" href="#">Salesforce Lead Generation</a>
+        </div>
+      </div>
+    </div>
+
+    <% if (user) { %>
+    <div class="container">
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="page-header">
+        <h1 id="heading">Contact Me</h1>
+      </div>
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="span12">
+          <form id="leadGen" method="post" action="/lead" class="form-horizontal">
+            <fieldset>
+              <div class="control-group">
+                <label class="control-label" for="FirstName">First Name</label>
+                <div class="controls">
+                  <input maxLength="40" class="input-xlarge focused" id="FirstName" name="leadRec[FirstName]" type="text" value="<%= user.first_name %>"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="LastName">Last Name *</label>
+                <div class="controls">
+                  <input maxLength="80" class="input-xlarge required" id="LastName" data-message="A Last Name is required" required="required" name="leadRec[LastName]" type="text" value="<%= user.last_name %>"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="Company">Company *</label>
+                <div class="controls">
+                  <input maxlength="40" class="input-xlarge required" required="required" data-message="A Company name is needed" id="Company" name="leadRec[Company]" type="text"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="Email">Email address *</label>
+                <div class="controls">
+                  <div class="input-prepend">
+                    <span class="add-on"><i class="icon-envelope"></i></span>
+                    <input maxlength="80" class="span2 required" id="Email" data-message="A valid email address is required" required="required" type="email" name="leadRec[Email]" value=""/>
+                  </div>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="Phone">Contact Phone</label>
+                <div class="controls">
+                  <input class="input-xlarge" id="Phone" name="Phone" type="text"/>
+                </div>
+              </div>
+              <div class="control-group">
+                <label class="control-label" for="Description">Notes</label>
+                <div class="controls">
+                  <textarea id="Description" name="leadRec[Description]" class="input-xlarge" style="margin-left: 0px; margin-right: 0px; width: 287px; margin-top: 0px; margin-bottom: 0px; height: 54px;" rows="3"></textarea> 
+                </div>
+              </div>
+              <div class="form-actions">
+                <button id="submitBtn" type="git" class="btn btn-primary" onClick="$('#message').attr('class','').html('');">Submit</button>
+              </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+        <div class="row">  
+          <div class="span6">
+            <div id="message">
+            </div>
+            <div>
+              <img id="progressIcon" src="images/ajax-loader.gif" style="display:none"/>
+            </div>
+          </div>      
+        </div>  
+<!--
+      <div id="referAFriend" style="display:none" class="row">
+        <div class="page-header" >
+          <h1 >Refer a Friend <small>Click on an image to refer that friend</small></h1>        
+        </div>
+        <div class="row">
+          <div class="span12">
+            <ul id="friendCarousel" class="jcarousel-skin-tango">            
+              <% req.friends.forEach(function(friend) { %>
+                <li>
+                  <img style="width:100%;max-width:200px;max-height:180px;" onClick="referFriend(this)" src="<%= friend.pic_big %>" alt="<%= friend.name %>" title="<%= friend.pic_big %>" first_name="<%= friend.first_name %>" last_name="<%= friend.last_name %>" email="<%= friend.email %>"/>
+                </li>
+              <% }); %>     
+            </ul>
+          </div>
+        </div>
+      </div>
+-->
+    </div> <!-- /container -->
+    <% } else { %>
+        <div class="fb-login-button" data-scope="email"></div>
+    <% } %>
+</body>
+</html>
+
